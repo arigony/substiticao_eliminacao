@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Substituição e eliminação: SN1, SN2, E1, E2 · simulador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f9fb; --paper:#ffffff; --ink:#16263a; --muted:#5b6b7b; --line:#d5dde5;
+  --arrow:#d23a2f; --pos:#1f63c6; --neg:#d23a2f; --accent:#0f5c70; --accent-soft:#e3f0f3;
+  --ok:#1e7a4a; --ok-soft:#e5f4ec; --bad:#b3372d; --bad-soft:#fbeae8; --metal:#b9c2cc;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161d; --paper:#18212b; --ink:#e6edf3; --muted:#9aa9b8; --line:#2c3a48;
+    --arrow:#ff6b5e; --pos:#6aa8ff; --neg:#ff6b5e; --accent:#5cc3d6; --accent-soft:#16323a;
+    --ok:#5fd394; --ok-soft:#163326; --bad:#ff8a7e; --bad-soft:#3a1c19; --metal:#46525e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161d; --paper:#18212b; --ink:#e6edf3; --muted:#9aa9b8; --line:#2c3a48;
+  --arrow:#ff6b5e; --pos:#6aa8ff; --neg:#ff6b5e; --accent:#5cc3d6; --accent-soft:#16323a;
+  --ok:#5fd394; --ok-soft:#163326; --bad:#ff8a7e; --bad-soft:#3a1c19; --metal:#46525e;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.55}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1,h2,h3{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:600;line-height:1.2;margin:0}
+h1{font-size:clamp(28px,5vw,40px)}
+.lede{color:var(--muted);margin:8px 0 18px;max-width:62ch}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:15px;padding:8px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.tab small{color:var(--muted);margin-right:6px}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.tab[aria-selected="true"] small{color:inherit;opacity:.8}
+.tab:focus-visible,.btn:focus-visible,.dot:focus-visible,.opt:focus-visible{outline:3px solid var(--pos);outline-offset:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.mhead{padding:16px 18px 6px}
+.mhead h2{font-size:26px}
+.mhead p{margin:4px 0 0;color:var(--muted)}
+.stage-wrap{overflow-x:auto;padding:4px 6px 0}
+svg#stage{display:block;width:100%;min-width:320px;height:auto}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 18px 12px;border-bottom:1px solid var(--line)}
+.btn{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper);font-weight:600}
+.btn:disabled{opacity:.4;cursor:default}
+.dots{display:flex;gap:6px;margin:0 6px}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--accent);background:transparent;padding:0;cursor:pointer}
+.dot[aria-current="step"]{background:var(--accent)}
+.spacer{flex:1}
+.explain{padding:14px 18px 6px}
+.explain h3{font-size:20px;margin-bottom:4px}
+.explain .num{color:var(--muted);font-family:"IBM Plex Sans",sans-serif;font-size:14px;font-weight:500;display:block;margin-bottom:2px}
+.explain p{margin:0 0 6px;max-width:68ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line);margin-top:10px}
+.facts div{background:var(--paper);padding:10px 18px}
+.facts dt{font-size:13px;color:var(--muted)}
+.facts dd{margin:0;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:14px;margin:12px 2px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+section.block{margin-top:36px}
+section.block h2{font-size:26px;margin-bottom:10px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-weight:600;background:var(--accent-soft)}
+tr:last-child td{border-bottom:0}
+td a{color:var(--accent);font-weight:600;text-decoration:none}
+.quiz{display:grid;gap:14px}
+.q{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.q p.stem{margin:0 0 10px;font-weight:600}
+.opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.fb{margin:10px 0 0;font-size:15px}
+.fb.right{color:var(--ok)} .fb.wrong{color:var(--bad)}
+.fb a{color:inherit;font-weight:600}
+footer{margin-top:36px;color:var(--muted);font-size:14px}
+/* SVG */
+.lab{font-family:"IBM Plex Sans",Arial,sans-serif;font-size:21px;fill:var(--ink)}
+.bond{stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;fill:none}
+.wedge{fill:var(--ink)}
+.lp{fill:var(--ink)}
+.chg-p{stroke:var(--pos);fill:var(--paper)} .chg-pt{fill:var(--pos)}
+.chg-n{stroke:var(--neg);fill:var(--paper)} .chg-nt{fill:var(--neg)}
+.t-note{font-size:16px;fill:var(--muted);font-family:"IBM Plex Sans",sans-serif}
+.t-name{font-size:19px;fill:var(--ink);font-weight:600;font-family:"IBM Plex Sans",sans-serif}
+.t-dp{font-size:17px;fill:var(--pos);font-style:italic}
+.t-dn{font-size:17px;fill:var(--neg);font-style:italic}
+.t-big{font-size:30px;fill:var(--muted)}
+.t-chem{font-size:21px;fill:var(--ink);font-family:"IBM Plex Sans",sans-serif}
+.rxn{stroke:var(--ink);stroke-width:2;fill:none}
+.rxnh{fill:var(--ink)}
+.arr{stroke:var(--arrow);stroke-width:2.4;fill:none;stroke-linecap:round}
+.arrh{fill:var(--arrow)}
+.mv{stroke:var(--muted);stroke-width:2;fill:none;stroke-dasharray:6 5}
+.mvh{fill:var(--muted)}
+.metal{fill:var(--metal)}
+.metal-t{font-size:15px;fill:var(--muted)}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+.energy{padding:6px 18px 4px;border-top:1px solid var(--line)}
+.energy h3{font-family:"IBM Plex Sans",sans-serif;font-size:14px;font-weight:600;color:var(--muted);margin:6px 0 0}
+svg#energy{display:block;width:100%;max-width:600px;height:auto}
+.ax{stroke:var(--muted);stroke-width:1.5} .axh{fill:var(--muted)}
+.curve{stroke:var(--accent);stroke-width:3;fill:none}
+.edot{fill:var(--arrow);stroke:var(--paper);stroke-width:2.5}
+.ea{stroke:var(--pos);stroke-width:1.6;fill:none} .eah{fill:var(--pos)}
+.t-ea{font-size:16px;fill:var(--pos);font-style:italic}
+.t-elab{font-size:14px;fill:var(--muted)}
+.flow{padding:16px 18px}
+.flow p.lbl{margin:0 0 8px;font-weight:600}
+.fbtns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.fbtns .opt{flex:1 1 180px}
+.opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.opt small{display:block;font-size:13px;opacity:.8}
+#flowOut{background:var(--accent-soft);border-radius:10px;padding:12px 14px}
+#flowOut p{margin:0 0 6px} .fres{font-family:"Newsreader",Georgia,serif;font-size:24px;font-weight:600}
+#flowOut a{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Substituição e eliminação</h1>
+  <p class="lede">SN2, SN1, E2 e E1 passo a passo. As setas vermelhas mostram para onde vão os elétrons, os átomos se movem até a próxima estrutura e o ponto no diagrama de energia acompanha cada etapa. Tente prever o próximo passo antes de avançar.</p>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Mecanismos"></nav>
+
+  <div class="card">
+    <div class="mhead"><h2 id="mTitle"></h2><p id="mSub"></p></div>
+    <div class="stage-wrap">
+      <svg id="stage" viewBox="0 0 600 270" role="img" aria-labelledby="stepTitle"><g id="scene"></g><g id="arrows"></g></svg>
+    </div>
+    <div class="controls">
+      <button class="btn" id="prev">◀ Anterior</button>
+      <div class="dots" id="dots"></div>
+      <button class="btn primary" id="next">Próxima ▶</button>
+      <span class="spacer"></span>
+      <button class="btn" id="replay">Repetir setas</button>
+      <button class="btn" id="auto">Reproduzir tudo</button>
+    </div>
+    <div class="explain" aria-live="polite">
+      <span class="num" id="stepNum"></span>
+      <h3 id="stepTitle"></h3>
+      <p id="stepText"></p>
+    </div>
+    <div class="energy"><h3 id="enTitle"></h3><svg id="energy" viewBox="0 0 600 192" aria-hidden="true"></svg></div>
+    <dl class="facts" id="facts"></dl>
+  </div>
+  <div class="legend">
+    <span><svg width="34" height="14"><path d="M2 12 Q17 0 30 10" class="arr"/></svg>movimento de um par de elétrons</span>
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="6" class="edot"/></svg>posição no diagrama de energia</span>
+  </div>
+
+  <section class="block">
+    <h2>Qual mecanismo?</h2>
+    <div class="card flow">
+      <p class="lbl">1. O carbono ligado ao grupo de saída é:</p>
+      <div class="fbtns">
+        <button class="opt" data-flow="sub" data-v="p" aria-pressed="false">metila ou 1º</button>
+        <button class="opt" data-flow="sub" data-v="s" aria-pressed="false">2º</button>
+        <button class="opt" data-flow="sub" data-v="t" aria-pressed="false">3º</button>
+      </div>
+      <div id="flowStep2" hidden>
+        <p class="lbl">2. O reagente é:</p>
+        <div class="fbtns">
+          <button class="opt" data-flow="reag" data-v="fraco" aria-pressed="false">nucleófilo/base fraco<small>H₂O, ROH</small></button>
+          <button class="opt" data-flow="reag" data-v="forte" aria-pressed="false">nucleófilo forte, pouco básico<small>I⁻, CN⁻, N₃⁻, RS⁻</small></button>
+          <button class="opt" data-flow="reag" data-v="base" aria-pressed="false">base forte<small>OH⁻, RO⁻</small></button>
+          <button class="opt" data-flow="reag" data-v="vol" aria-pressed="false">base forte volumosa<small>t-BuO⁻</small></button>
+        </div>
+      </div>
+      <div id="flowOut" hidden aria-live="polite"></div>
+      <p style="margin:12px 0 0"><button class="btn" id="flowReset">Recomeçar</button></p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Quadro comparativo</h2>
+    <div class="tbl"><table id="summary"></table></div>
+  </section>
+
+  <section class="block">
+    <h2>Desafios</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>Química Orgânica · PUCRS. Mecanismos simplificados para revisão.</footer>
+</div>
+<script>
+const A=(x,y,l,o={})=>Object.assign({x,y,l},o);
+const MECH=[
+{id:'sn2',tab:'SN2',title:'Substituição nucleofílica bimolecular',sub:'(S)-2-bromobutano + OH⁻ → (R)-2-butanol',prof:'one',
+ facts:{Substrato:'metila > 1º > 2º',Reagente:'nucleófilo forte',Solvente:'polar aprótico (DMSO, acetona)',Cinética:'v = k[RX][Nu]',Estereoquímica:'inversão (Walden)',Rearranjo:'não'},
+ steps:[
+ {t:'Ataque pelo lado de trás',ep:60,d:'O nucleófilo (OH⁻) usa um par isolado para atacar o carbono pelo lado oposto ao Br, a 180°. Ao mesmo tempo, a ligação C–Br começa a se quebrar. Nucleófilo e substrato participam da mesma etapa: por isso v = k[RX][Nu].',
+  s:{atoms:{nh:A(70,140,'H'),nu:A(120,140,'O',{c:'−',lp:[90,270,0]}),c:A(300,140,'C'),br:A(395,140,'Br',{lp:[270,90,0]}),g1:A(262,62,'C2H5'),g2:A(232,200,'H3C'),g3:A(322,215,'H')},
+   bonds:[['nh','nu',1],['c','br',1],['c','g1',1],['c','g2',1,'wedge'],['c','g3',1,'hash']],
+   texts:[{x:470,y:230,s:'(S)-2-bromobutano',c:'note'}],
+   arrows:[{f:[137,134],t:[285,133],b:-35},{f:[350,147],t:[392,160],b:16}]}},
+ {t:'Estado de transição',ep:300,d:'No estado de transição o carbono fica com cinco ligações parciais: O e Br nas pontas (tracejado) e os três grupos num plano, como um guarda-chuva virando ao vento. Substratos muito ramificados bloqueiam essa aproximação: é o impedimento estérico que torna a SN2 lenta em carbonos 3º.',
+  s:{atoms:{nh:A(140,140,'H'),nu:A(190,140,'O',{lp:[90,270]}),c:A(300,140,'C'),br:A(410,140,'Br',{lp:[270,90,0]}),g1:A(300,58,'C2H5'),g2:A(262,215,'H3C'),g3:A(345,212,'H')},
+   bonds:[['nh','nu',1],['nu','c',1,'dash'],['c','br',1,'dash'],['c','g1',1],['c','g2',1,'wedge'],['c','g3',1,'hash']],
+   texts:[{x:190,y:108,s:'δ−',c:'dn'},{x:410,y:108,s:'δ−',c:'dn'},{x:480,y:60,s:'‡',c:'big'},{x:480,y:215,s:'5 ligações parciais',c:'note'}]}},
+ {t:'Inversão de configuração',ep:540,d:'O Br sai como brometo e os três grupos viram para o outro lado. O (S)-2-bromobutano dá o (R)-2-butanol: inversão de Walden. Toda SN2 num estereocentro inverte a configuração geométrica.',
+  s:{atoms:{nh:A(165,140,'H'),nu:A(215,140,'O',{lp:[90,270]}),c:A(300,140,'C'),g1:A(338,62,'C2H5'),g2:A(368,200,'CH3'),g3:A(278,215,'H'),br:A(490,140,'Br',{c:'−',lp:[90,180,270]})},
+   bonds:[['nh','nu',1],['nu','c',1],['c','g1',1],['c','g2',1,'wedge'],['c','g3',1,'hash']],
+   texts:[{x:480,y:50,s:'(R)-2-butanol',c:'name'},{x:480,y:76,s:'inversão de Walden',c:'note'}]}}
+ ]},
+
+{id:'sn1',tab:'SN1',title:'Substituição nucleofílica unimolecular',sub:'brometo de terc-butila + H₂O → 2-metil-2-propanol',prof:'two',
+ facts:{Substrato:'3º > 2º',Reagente:'nucleófilo fraco (H₂O, ROH)',Solvente:'polar prótico',Cinética:'v = k[RX]',Estereoquímica:'racemização',Rearranjo:'pode ocorrer'},
+ steps:[
+ {t:'Ionização (etapa lenta)',ep:45,d:'Sem ajuda do nucleófilo, a ligação C–Br se quebra e o par de elétrons vai para o Br. Solventes próticos estabilizam os íons formados. Só o substrato participa da etapa lenta: v = k[RX].',
+  s:{atoms:{c:A(200,140,'C'),m1:A(200,62,'CH3'),m2:A(125,185,'H3C'),m3:A(230,215,'CH3'),br:A(290,140,'Br',{lp:[270,90,0]}),w:A(430,90,'O',{lp:[180,90]}),wh1:A(475,65,'H'),wh2:A(475,115,'H')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',1],['c','br',1],['w','wh1',1],['w','wh2',1]],
+   texts:[{x:430,y:215,s:'H₂O: solvente e nucleófilo',c:'note'}],
+   arrows:[{f:[245,147],t:[287,160],b:16}]}},
+ {t:'Carbocátion plano',ep:300,d:'Forma-se um carbocátion terciário, plano (sp²), com um orbital p vazio. A água pode atacar por cima ou por baixo do plano com a mesma chance: se o carbono fosse estereocentro, o produto sairia racêmico.',
+  s:{atoms:{c:A(200,140,'C',{c:'+',cp:[-18,-14]}),m1:A(200,62,'CH3'),m2:A(130,185,'H3C'),m3:A(270,185,'CH3'),br:A(340,235,'Br',{c:'−',lp:[0,90,180]}),w:A(430,90,'O',{lp:[180,90]}),wh1:A(475,65,'H'),wh2:A(475,115,'H')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',1],['w','wh1',1],['w','wh2',1]],
+   texts:[{x:190,y:240,s:'carbocátion 3º (sp²)',c:'note'}],
+   arrows:[{f:[413,88],t:[216,126],b:-30}]}},
+ {t:'Íon oxônio',ep:470,d:'A água ligou-se ao carbono e o oxigênio ficou com carga +. Outra molécula de água remove um H⁺.',
+  s:{atoms:{c:A(200,140,'C'),m1:A(200,62,'CH3'),m2:A(125,185,'H3C'),m3:A(230,215,'CH3'),br:A(340,235,'Br',{c:'−',lp:[0,90,180]}),w:A(290,140,'O',{c:'+',cp:[0,-22]}),wh1:A(330,110,'H'),wh2:A(330,170,'H'),
+     w2:A(450,170,'O',{lp:[180,90]}),w2h1:A(495,145,'H'),w2h2:A(495,195,'H')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',1],['c','w',1],['w','wh1',1],['w','wh2',1],['w2','w2h1',1],['w2','w2h2',1]],
+   arrows:[{f:[433,168],t:[343,172],b:16},{f:[313,160],t:[299,158],b:10}]}},
+ {t:'Produto',ep:550,d:'Sai o 2-metil-2-propanol e forma-se H₃O⁺. Etapa lenta única, com intermediário: por isso o diagrama tem dois picos e um vale.',
+  s:{atoms:{c:A(200,140,'C'),m1:A(200,62,'CH3'),m2:A(125,185,'H3C'),m3:A(230,215,'CH3'),br:A(340,235,'Br',{c:'−',lp:[0,90,180]}),w:A(290,140,'O',{lp:[90,270]}),wh1:A(330,110,'H'),
+     w2:A(450,170,'O',{c:'+'}),wh2:A(405,170,'H'),w2h1:A(495,145,'H'),w2h2:A(495,195,'H')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',1],['c','w',1],['w','wh1',1],['w2','w2h1',1],['w2','w2h2',1],['w2','wh2',1]],
+   texts:[{x:440,y:50,s:'2-metil-2-propanol',c:'name'},{x:440,y:76,s:'estereocentro → racemato',c:'note'}]}},
+ {t:'Extra: rearranjo do carbocátion',ep:300,d:'Outro exemplo: 2-bromo-3,3-dimetilbutano em água forma um carbocátion secundário. Um grupo metila vizinho migra com seu par de elétrons (deslocamento 1,2) para o carbono positivo.',
+  s:{atoms:{r1:A(110,150,'H3C'),r2:A(200,150,'CH',{c:'+',cp:[-22,-16]}),r3:A(290,150,'C'),rU:A(290,70,'CH3'),rD:A(290,230,'CH3'),rR:A(375,150,'CH3')},
+   bonds:[['r1','r2',1],['r2','r3',1],['r3','rU',1],['r3','rD',1],['r3','rR',1]],
+   texts:[{x:170,y:205,s:'carbocátion 2º',c:'note'},{x:480,y:70,s:'deslocamento 1,2',c:'note'},{x:480,y:94,s:'de metila',c:'note'}],
+   arrows:[{f:[284,110],t:[208,132],b:22}]}},
+ {t:'Extra: carbocátion 3º, mais estável',ep:300,d:'Agora a carga está num carbono terciário, mais estável. A água ataca aqui e o produto principal é o 2,3-dimetil-2-butanol, com esqueleto rearranjado. Rearranjos só acontecem quando há carbocátion livre (SN1 e E1).',
+  s:{atoms:{r1:A(110,150,'H3C'),r2:A(200,150,'CH'),r3:A(290,150,'C',{c:'+'}),rU:A(200,70,'CH3'),rD:A(290,230,'CH3'),rR:A(375,150,'CH3')},
+   bonds:[['r1','r2',1],['r2','r3',1],['r2','rU',1],['r3','rD',1],['r3','rR',1]],
+   texts:[{x:480,y:210,s:'carbocátion 3º',c:'note'},{x:480,y:234,s:'→ 2,3-dimetil-2-butanol',c:'note'}]}}
+ ]},
+
+{id:'e2',tab:'E2',title:'Eliminação bimolecular',sub:'2-bromopropano + EtO⁻ → propeno',prof:'one',
+ facts:{Substrato:'3º > 2º > 1º',Reagente:'base forte (RO⁻, OH⁻)',Solvente:'geralmente o álcool da base',Cinética:'v = k[RX][B]',Estereoquímica:'H e grupo de saída anti',Rearranjo:'não'},
+ steps:[
+ {t:'Três movimentos ao mesmo tempo',ep:60,d:'A base (EtO⁻) remove um H do carbono β. O par da ligação C–H vira a nova ligação π, e o Br sai com o par da ligação C–Br. O H e o Br precisam estar em lados opostos (antiperiplanares).',
+  s:{atoms:{et:A(70,62,'Et'),o:A(130,62,'O',{c:'−',lp:[90,270]}),hb:A(220,62,'H'),cb:A(220,140,'C'),hb2:A(150,160,'H'),hb3:A(165,210,'H'),ca:A(300,140,'C'),hA:A(300,62,'H'),m:A(385,140,'CH3'),br:A(300,225,'Br',{lp:[0,90,180]})},
+   bonds:[['et','o',1],['hb','cb',1],['cb','hb2',1],['cb','hb3',1],['cb','ca',1],['ca','hA',1],['ca','m',1],['ca','br',1]],
+   texts:[{x:220,y:30,s:'β',c:'note'},{x:470,y:215,s:'H e Br antiperiplanares',c:'note'}],
+   arrows:[{f:[146,56],t:[208,56],b:-14},{f:[226,100],t:[258,132],b:12},{f:[306,180],t:[318,212],b:-10}]}},
+ {t:'Estado de transição único',ep:300,d:'Tudo acontece numa etapa: a ligação O–H se forma, C–H e C–Br se quebram e a ligação π aparece ao mesmo tempo. Base e substrato entram na etapa lenta: v = k[RX][B].',
+  s:{atoms:{et:A(70,62,'Et'),o:A(130,62,'O',{lp:[90,270]}),hb:A(200,75,'H'),cb:A(220,140,'C'),hb2:A(150,160,'H'),hb3:A(165,210,'H'),ca:A(300,140,'C'),hA:A(300,62,'H'),m:A(385,140,'CH3'),br:A(300,232,'Br',{lp:[0,90,180]})},
+   bonds:[['et','o',1],['o','hb',1,'dash'],['hb','cb',1,'dash'],['cb','hb2',1],['cb','hb3',1],['cb','ca',2,'dp'],['ca','hA',1],['ca','m',1],['ca','br',1,'dash']],
+   texts:[{x:130,y:32,s:'δ−',c:'dn'},{x:340,y:232,s:'δ−',c:'dn'},{x:480,y:60,s:'‡',c:'big'},{x:480,y:150,s:'uma única etapa',c:'note'}]}},
+ {t:'Alceno formado',ep:540,d:'Formam-se propeno, etanol e brometo. Quando há mais de um H β possível, o produto principal costuma ser o alceno mais substituído (Zaitsev). Com base volumosa, como t-BuO⁻, predomina o menos substituído (Hofmann).',
+  s:{atoms:{et:A(60,45,'Et'),o:A(120,45,'O',{lp:[90,270]}),hb:A(180,45,'H'),cb:A(220,140,'C'),hb2:A(165,105,'H'),hb3:A(165,180,'H'),ca:A(300,140,'C'),hA:A(345,95,'H'),m:A(350,200,'CH3'),br:A(480,215,'Br',{c:'−',lp:[0,90,180]})},
+   bonds:[['et','o',1],['o','hb',1],['cb','hb2',1],['cb','hb3',1],['cb','ca',2],['ca','hA',1],['ca','m',1]],
+   texts:[{x:480,y:110,s:'propeno',c:'name'},{x:480,y:136,s:'+ EtOH + Br⁻',c:'note'}]}}
+ ]},
+
+{id:'e1',tab:'E1',title:'Eliminação unimolecular',sub:'brometo de terc-butila em etanol, com aquecimento → 2-metilpropeno',prof:'two',
+ facts:{Substrato:'3º > 2º',Reagente:'base fraca + calor',Solvente:'polar prótico',Cinética:'v = k[RX]',Estereoquímica:'Zaitsev (alceno mais substituído)',Rearranjo:'pode ocorrer'},
+ steps:[
+ {t:'Ionização (igual à SN1)',ep:45,d:'A primeira etapa é idêntica à da SN1: o Br sai sozinho e forma o carbocátion. Por isso SN1 e E1 competem sempre; aquecer favorece a eliminação.',
+  s:{atoms:{c:A(200,140,'C'),m1:A(200,62,'CH3'),m2:A(125,185,'H3C'),m3:A(230,215,'CH3'),hb:A(230,215,'H',{ghost:1}),br:A(290,140,'Br',{lp:[270,90,0]}),o:A(430,215,'O',{lp:[180,90]}),oh:A(430,160,'H'),et:A(485,215,'Et')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',1],['c','br',1],['o','oh',1],['o','et',1]],
+   arrows:[{f:[245,147],t:[287,160],b:16}]}},
+ {t:'A base fraca remove um H β',ep:300,d:'O etanol é nucleófilo fraco e base fraca. Em vez de atacar o carbono positivo, ele remove um H de um carbono vizinho (β). O par da ligação C–H forma a ligação π.',
+  s:{atoms:{c:A(200,140,'C',{c:'+',cp:[-18,-14]}),m1:A(200,62,'CH3'),m2:A(130,185,'H3C'),m3:A(280,185,'CH2'),hb:A(320,240,'H'),br:A(330,60,'Br',{c:'−',lp:[0,90,180]}),o:A(430,215,'O',{lp:[180,90]}),oh:A(430,160,'H'),et:A(485,215,'Et')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',1],['m3','hb',1],['o','oh',1],['o','et',1]],
+   texts:[{x:120,y:245,s:'carbocátion 3º',c:'note'}],
+   arrows:[{f:[412,213],t:[334,238],b:12},{f:[298,214],t:[242,168],b:-14}]}},
+ {t:'Alceno de Zaitsev',ep:550,d:'Forma-se o 2-metilpropeno. Quando há vários H β, sai o alceno mais substituído e mais estável (Zaitsev). A E1 não exige geometria anti, porque o carbocátion é plano.',
+  s:{atoms:{c:A(200,140,'C'),m1:A(140,90,'H3C'),m2:A(140,195,'H3C'),m3:A(285,140,'CH2'),hb:A(385,215,'H'),br:A(330,60,'Br',{c:'−',lp:[0,90,180]}),o:A(430,215,'O',{c:'+'}),oh:A(430,160,'H'),et:A(485,215,'Et')},
+   bonds:[['c','m1',1],['c','m2',1],['c','m3',2],['o','hb',1],['o','oh',1],['o','et',1]],
+   texts:[{x:480,y:100,s:'2-metilpropeno',c:'name'}]}},
+ {t:'Extra: rearranjo antes da eliminação',ep:300,d:'Com 2-bromo-3,3-dimetilbutano, o carbocátion inicial é secundário. Uma metila vizinha migra (deslocamento 1,2) e a carga passa para o carbono terciário.',
+  s:{atoms:{r1:A(110,150,'H3C'),r2:A(200,150,'C',{c:'+',cp:[-18,-16]}),rH:A(200,230,'H'),r3:A(290,150,'C'),rU:A(290,70,'CH3'),rD:A(290,230,'CH3'),rR:A(375,150,'CH3')},
+   bonds:[['r1','r2',1],['r2','rH',1],['r2','r3',1],['r3','rU',1],['r3','rD',1],['r3','rR',1]],
+   texts:[{x:110,y:205,s:'carbocátion 2º',c:'note'},{x:480,y:70,s:'deslocamento 1,2',c:'note'},{x:480,y:94,s:'de metila',c:'note'}],
+   arrows:[{f:[284,110],t:[208,132],b:22}]}},
+ {t:'Extra: eliminação a partir do 3º',ep:300,d:'A base remove o H do carbono vizinho ao C⁺. O par da ligação C–H forma a ligação dupla entre os dois carbonos centrais.',
+  s:{atoms:{r1:A(110,150,'H3C'),r2:A(200,150,'C'),rH:A(200,230,'H'),r3:A(290,150,'C',{c:'+'}),rU:A(200,70,'CH3'),rD:A(290,230,'CH3'),rR:A(375,150,'CH3'),bs:A(80,235,'EtOH')},
+   bonds:[['r1','r2',1],['r2','rH',1],['r2','r3',1],['r2','rU',1],['r3','rD',1],['r3','rR',1]],
+   arrows:[{f:[112,228],t:[188,228],b:-10},{f:[206,192],t:[243,158],b:-14}]}},
+ {t:'Extra: alceno tetrassubstituído',ep:550,d:'Produto principal: 2,3-dimetil-2-buteno, o alceno mais substituído possível (Zaitsev), com esqueleto rearranjado.',
+  s:{atoms:{r2:A(230,150,'C'),r3:A(310,150,'C'),r1:A(160,95,'H3C'),rU:A(160,205,'H3C'),rD:A(380,205,'CH3'),rR:A(380,95,'CH3'),rH:A(80,235,'H',{ghost:1}),bs:A(80,235,'EtOH2',{c:'+'})},
+   bonds:[['r1','r2',1],['rU','r2',1],['r2','r3',2],['r3','rD',1],['r3','rR',1]],
+   texts:[{x:495,y:150,s:'2,3-dimetil-2-buteno',c:'name'},{x:495,y:176,s:'tetrassubstituído',c:'note'}]}}
+ ]}
+];
+
+const QUIZ=[
+ {q:'Qual é a lei de velocidade da SN2?',o:['v = k[RX]','v = k[RX][Nu]','v = k[Nu]'],a:1,e:'Nucleófilo e substrato estão juntos na única etapa: cinética de 2ª ordem.',m:0},
+ {q:'(R)-2-bromobutano + NaCN em DMSO →',o:['(S)-2-metilbutanonitrila','(R)-2-metilbutanonitrila','mistura racêmica'],a:0,e:'Nucleófilo forte em solvente aprótico num carbono 2º: SN2, com inversão. O CN tem a mesma prioridade que tinha o Br, então R vira S.',m:0},
+ {q:'Brometo de terc-butila em etanol, a 25 °C → produto principal',o:['éter etil terc-butílico','2-metilpropeno','não reage'],a:0,e:'Carbono 3º com nucleófilo fraco em solvente prótico: SN1. Sem aquecimento a substituição predomina; a E1 dá produto minoritário.',m:1},
+ {q:'2-bromopropano + t-BuOK →',o:['propeno','2-terc-butoxipropano','2-propanol'],a:0,e:'t-BuO⁻ é base forte e volumosa: nucleófilo ruim, então E2.',m:2},
+ {q:'2-bromobutano + EtONa/EtOH, com aquecimento → alceno principal',o:['1-buteno','2-buteno (trans majoritário)','ciclobutano'],a:1,e:'E2 com base não volumosa: sai o alceno mais substituído (Zaitsev), preferencialmente trans.',m:2},
+ {q:'Qual solvente favorece a SN2?',o:['água','DMSO','etanol'],a:1,e:'Solventes polares apróticos não solvatam bem o nucleófilo aniônico, que fica mais reativo.',m:0},
+ {q:'2-bromo-3,3-dimetilbutano em água → produto principal',o:['3,3-dimetil-2-butanol','2,3-dimetil-2-butanol','2,2-dimetil-1-butanol'],a:1,e:'O carbocátion 2º sofre deslocamento 1,2 de metila e vira 3º antes do ataque da água.',m:1}
+];
+
+const PROF={
+ one:{d:'M40 140 C 180 140, 220 40, 300 40 S 420 165, 560 165',labels:[[62,160,'reagentes'],[300,24,'ET‡'],[545,148,'produtos']],ea:null},
+ two:{d:'M40 150 C 120 150, 150 40, 190 40 S 260 105, 300 105 S 370 70, 400 70 S 480 170, 560 170',labels:[[62,170,'reagentes'],[190,24,'ET1 (lenta)'],[300,128,'carbocátion'],[400,54,'ET2'],[545,153,'produtos']],ea:[190,150,40]}
+};
+
+const DECIDE={
+ p:{
+  fraco:['Praticamente não reage','Carbocátion 1º é instável demais para SN1, e um nucleófilo fraco torna a SN2 muito lenta.',null],
+  forte:['SN2','Carbono pouco impedido e nucleófilo forte: substituição direta com inversão.',0],
+  base:['SN2 (E2 minoritária)','Com base forte não volumosa, carbonos 1º ainda preferem substituição.',0],
+  vol:['E2','A base volumosa não alcança o carbono, mas remove facilmente um H β.',2]},
+ s:{
+  fraco:['SN1 + E1 (mistura)','Reações lentas, via carbocátion. Aquecimento favorece E1. Fique atento a rearranjos.',1],
+  forte:['SN2','Nucleófilo forte e pouco básico (I⁻, CN⁻, N₃⁻, RS⁻), de preferência em solvente polar aprótico.',0],
+  base:['E2 (SN2 minoritária)','Base forte em carbono 2º: eliminação predomina, com alceno de Zaitsev.',2],
+  vol:['E2 (Hofmann)','Base volumosa: eliminação, com mais alceno menos substituído.',2]},
+ t:{
+  fraco:['SN1 + E1','Carbocátion 3º estável. Sem aquecimento predomina SN1; com calor, E1.',1],
+  forte:['SN1','SN2 é impossível no carbono 3º. Com nucleófilo pouco básico em solvente prótico, ocorre SN1.',1],
+  base:['E2','Base forte em carbono 3º: eliminação bimolecular, alceno de Zaitsev.',2],
+  vol:['E2 (Hofmann)','Base volumosa: eliminação, com mais alceno menos substituído.',2]}
+};
+
+/* ====================== MOTOR DE DESENHO ====================== */
+const scene=document.getElementById('scene'), arrowsG=document.getElementById('arrows');
+const NS='http://www.w3.org/2000/svg';
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cw=c=>/\d/.test(c)?9:(/[a-z]/.test(c)?11:14);
+const lwid=l=>[...l].reduce((s,c)=>s+cw(c),0);
+const box=at=>(!at||!at.l)?[0,0]:[lwid(at.l)/2+3,12];
+
+function labelSVG(at,x,y,op){
+  if(!at.l||op<=0.01) return '';
+  const segs=at.l.match(/\d+|\D+/g); let s='',down=false;
+  for(const g of segs){
+    if(/\d/.test(g)){s+=`<tspan dy="6" font-size="15">${g}</tspan>`;down=true}
+    else{s+=`<tspan${down?' dy="-6"':''}>${g}</tspan>`;down=false}
+  }
+  return `<text x="${x}" y="${y}" class="lab" text-anchor="middle" dominant-baseline="central" opacity="${op}">${s}</text>`;
+}
+function edgeDist(hw,hh,ang){const c=Math.abs(Math.cos(ang)),s=Math.abs(Math.sin(ang));return Math.min(c>1e-6?hw/c:1e9,s>1e-6?hh/s:1e9)}
+function decoSVG(at,x,y,op){
+  if(op<=0.01) return ''; let s=''; const [hw,hh]=box(at);
+  if(at.c){const [cx,cy]=at.cp?[x+at.cp[0],y+at.cp[1]]:[x+hw+4,y-17]; const p=at.c==='+';
+    s+=`<g opacity="${op}"><circle cx="${cx}" cy="${cy}" r="7.5" class="${p?'chg-p':'chg-n'}" stroke-width="1.6"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" class="${p?'chg-pt':'chg-nt'}">${p?'+':'−'}</text></g>`}
+  (at.lp||[]).forEach(d=>{const a=d*Math.PI/180,r=edgeDist(hw,hh,a)+4,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r,nx=-Math.sin(a)*3.4,ny=Math.cos(a)*3.4;
+    s+=`<circle cx="${px+nx}" cy="${py+ny}" r="2.1" class="lp" opacity="${op}"/><circle cx="${px-nx}" cy="${py-ny}" r="2.1" class="lp" opacity="${op}"/>`});
+  if(at.rad!==undefined){const a=at.rad*Math.PI/180,r=edgeDist(hw,hh,a)+5;s+=`<circle cx="${x+Math.cos(a)*r}" cy="${y+Math.sin(a)*r}" r="3.2" class="lp" opacity="${op}"/>`}
+  return s;
+}
+function trim(p,q,b){const [hw,hh]=b; if(!hw) return p; const dx=q[0]-p[0],dy=q[1]-p[1];
+  let t=Math.min(Math.abs(dx)>1e-6?hw/Math.abs(dx):1e9,Math.abs(dy)>1e-6?hh/Math.abs(dy):1e9); t=Math.min(t,.45); return [p[0]+dx*t,p[1]+dy*t]}
+function ln(a,b,cls='bond',extra=''){return `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" class="${cls}" ${extra}/>`}
+function bondSVG(p1,p2,bd,op){
+  if(op<=0.01) return ''; const [,, order=1, style='', side=0]=bd;
+  const dx=p2[0]-p1[0],dy=p2[1]-p1[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L; let s='';
+  const off=(p,k)=>[p[0]+nx*k,p[1]+ny*k];
+  if(style==='wedge'){s=`<polygon points="${p1[0]},${p1[1]} ${p2[0]+nx*5},${p2[1]+ny*5} ${p2[0]-nx*5},${p2[1]-ny*5}" class="wedge"/>`}
+  else if(style==='hash'){for(let i=1;i<=7;i++){const f=i/7,px=p1[0]+dx*f,py=p1[1]+dy*f,w=.6+4.4*f;s+=ln([px-nx*w,py-ny*w],[px+nx*w,py+ny*w],'bond','stroke-width="1.8"')}}
+  else if(style==='dash'){s=ln(p1,p2,'bond','stroke-dasharray="5 5"')}
+  else if(order===2&&style==='dp'){s=ln(off(p1,-2.8),off(p2,-2.8))+ln(off(p1,2.8),off(p2,2.8),'bond','stroke-dasharray="4 4"')}
+  else if(order===2&&side){const a=[p1[0]+dx*.15,p1[1]+dy*.15],b=[p1[0]+dx*.85,p1[1]+dy*.85];s=ln(p1,p2)+ln(off(a,side*6),off(b,side*6))}
+  else if(order===2){s=ln(off(p1,-3.2),off(p2,-3.2))+ln(off(p1,3.2),off(p2,3.2))}
+  else s=ln(p1,p2);
+  return `<g opacity="${op}">${s}</g>`;
+}
+const vis=a=>a&&!a.ghost?1:0;
+const akey=a=>a?JSON.stringify([a.l,a.c,a.cp,a.lp,a.rad,!!a.ghost]):'';
+const bkey=b=>{const [x,y,o=1,s='',d=0]=b;return (x<y?x+'|'+y:y+'|'+x)+'|'+o+'|'+s+'|'+d};
+const tkey=t=>JSON.stringify(t);
+
+function surfSVG(op){ if(op<=0.01) return ''; let s=`<g opacity="${op}">`;
+  for(let x=45;x<=555;x+=30) s+=`<circle cx="${x}" cy="248" r="13" class="metal"/>`;
+  return s+`<text x="590" y="214" class="metal-t" text-anchor="end">superfície de Pd</text></g>`}
+function rxnSVG(r,op){ if(op<=0.01) return '';
+  return `<g opacity="${op}">${ln([r.x1,r.y],[r.x2-10,r.y],'rxn')}<polygon points="${r.x2},${r.y} ${r.x2-12},${r.y-6} ${r.x2-12},${r.y+6}" class="rxnh"/>${r.top?`<text x="${(r.x1+r.x2)/2}" y="${r.y-12}" text-anchor="middle" class="t-note">${r.top}</text>`:''}</g>`}
+function textSVG(t,op){ if(op<=0.01) return ''; return `<text x="${t.x}" y="${t.y}" text-anchor="middle" dominant-baseline="central" class="t-${t.c||'note'}" opacity="${op}">${t.s}</text>`}
+
+function frame(Asc,B,t){
+  const Aa=Asc?Asc.atoms:{}, Ba=B.atoms; const ids=new Set([...Object.keys(Aa),...Object.keys(Ba)]); const P={},BX={};
+  let labels='',deco='';
+  ids.forEach(id=>{const a=Aa[id],b=Ba[id];
+    const x=a&&b?a.x+(b.x-a.x)*t:(b||a).x, y=a&&b?a.y+(b.y-a.y)*t:(b||a).y; P[id]=[x,y];
+    BX[id]=box(t<.5?(a||b):(b||a));
+    if(a&&b&&akey(a)===akey(b)){labels+=labelSVG(b,x,y,vis(b));deco+=decoSVG(b,x,y,vis(b))}
+    else{ if(a){labels+=labelSVG(a,x,y,vis(a)*(1-t));deco+=decoSVG(a,x,y,vis(a)*(1-t))}
+          if(b){labels+=labelSVG(b,x,y,vis(b)*t);deco+=decoSVG(b,x,y,vis(b)*t)} }
+  });
+  const bA=new Map((Asc?Asc.bonds:[]).map(b=>[bkey(b),b])), bB=new Map(B.bonds.map(b=>[bkey(b),b]));
+  let bonds=''; const draw=(bd,op)=>{const p1=P[bd[0]],p2=P[bd[1]];bonds+=bondSVG(trim(p1,p2,BX[bd[0]]),trim(p2,p1,BX[bd[1]]),bd,op)};
+  bB.forEach((bd,k)=>draw(bd,bA.has(k)?1:t)); bA.forEach((bd,k)=>{if(!bB.has(k)) draw(bd,1-t)});
+  let extra='';
+  const sA=Asc&&Asc.surf, sB=B.surf; if(sA||sB) extra+=surfSVG(sA&&sB?1:(sB?t:1-t));
+  const tA=new Map(((Asc&&Asc.texts)||[]).map(x=>[tkey(x),x])), tB=new Map((B.texts||[]).map(x=>[tkey(x),x]));
+  tB.forEach((x,k)=>extra+=textSVG(x,tA.has(k)?1:t)); tA.forEach((x,k)=>{if(!tB.has(k)) extra+=textSVG(x,1-t)});
+  const rA=new Map(((Asc&&Asc.rxn)||[]).map(x=>[tkey(x),x])), rB=new Map((B.rxn||[]).map(x=>[tkey(x),x]));
+  rB.forEach((x,k)=>extra+=rxnSVG(x,rA.has(k)?1:t)); rA.forEach((x,k)=>{if(!rB.has(k)) extra+=rxnSVG(x,1-t)});
+  return extra+bonds+labels+deco;
+}
+
+let arrowToken=0;
+function drawArrows(B){
+  const tok=++arrowToken; arrowsG.innerHTML='';
+  (B.arrows||[]).forEach((a,i)=>{
+    const [fx,fy]=a.f,[tx,ty]=a.t,dx=tx-fx,dy=ty-fy,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,bend=a.b||0;
+    const cx=(fx+tx)/2+nx*bend, cy=(fy+ty)/2+ny*bend;
+    let ux=tx-cx,uy=ty-cy; const ul=Math.hypot(ux,uy)||1; ux/=ul;uy/=ul; const px=-uy,py=ux;
+    const mv=a.k==='mv', bx=tx-ux*12, by=ty-uy*12;
+    const path=document.createElementNS(NS,'path');
+    path.setAttribute('d',`M${fx} ${fy} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`);
+    path.setAttribute('class',mv?'mv':'arr');
+    const head=document.createElementNS(NS,'polygon'); const sg=bend>=0?1:-1;
+    const pts=a.h?`${tx},${ty} ${bx+px*7*sg},${by+py*7*sg} ${bx},${by}`:`${tx},${ty} ${bx+px*5.5},${by+py*5.5} ${bx-px*5.5},${by-py*5.5}`;
+    head.setAttribute('points',pts); head.setAttribute('class',mv?'mvh':'arrh');
+    head.style.opacity=0; path.style.opacity=0;
+    arrowsG.append(path,head);
+    const delay=reduce?0:250+i*450;
+    setTimeout(()=>{ if(tok!==arrowToken) return;
+      if(reduce){path.style.opacity=1;head.style.opacity=1;return}
+      if(mv){path.style.transition='opacity .5s';head.style.transition='opacity .5s';path.style.opacity=1;head.style.opacity=1;return}
+      const len=path.getTotalLength(); path.style.strokeDasharray=len; path.style.strokeDashoffset=len; path.style.opacity=1;
+      path.getBoundingClientRect(); path.style.transition='stroke-dashoffset .8s ease-in-out'; path.style.strokeDashoffset=0;
+      setTimeout(()=>{if(tok===arrowToken){head.style.transition='opacity .2s';head.style.opacity=1}},720);
+    },delay);
+  });
+}
+
+let raf=null;
+function transition(Asc,B){
+  cancelAnimationFrame(raf); arrowToken++; arrowsG.innerHTML='';
+  const dur=reduce?0:(Asc?850:450), t0=performance.now();
+  const step=now=>{const t=dur?Math.min(1,(now-t0)/dur):1; const e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    scene.innerHTML=frame(Asc,B,e); if(t<1) raf=requestAnimationFrame(step); else drawArrows(B)};
+  raf=requestAnimationFrame(step);
+}
+
+
+/* ====================== DIAGRAMA DE ENERGIA ====================== */
+const en=document.getElementById('energy'); let enProf=null, enPath=null, enPts=[], enX=null, enRaf=null;
+function buildEnergy(key){
+  const P=PROF[key]; enProf=key;
+  let s=`<line x1="22" y1="178" x2="22" y2="14" class="ax"/><polygon points="22,8 17,18 27,18" class="axh"/>
+  <text x="14" y="96" class="t-note" text-anchor="middle" transform="rotate(-90 14 96)">energia</text>
+  <line x1="22" y1="178" x2="580" y2="178" class="ax"/>`;
+  if(P.ea){const [x,y1,y2]=P.ea; s+=`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2+4}" class="ea"/><polygon points="${x},${y2} ${x-5},${y2+10} ${x+5},${y2+10}" class="eah"/><line x1="40" y1="${y1}" x2="${x+10}" y2="${y1}" class="ea" stroke-dasharray="3 4"/><text x="${x-8}" y="${(y1+y2)/2+10}" text-anchor="end" class="t-ea">Eₐ</text>`}
+  s+=`<path id="enCurve" d="${P.d}" class="curve"/>`;
+  P.labels.forEach(([x,y,t])=>s+=`<text x="${x}" y="${y}" text-anchor="middle" class="t-elab">${t}</text>`);
+  s+=`<circle id="enDot" r="8" class="edot"/>`;
+  en.innerHTML=s; enPath=document.getElementById('enCurve');
+  const L=enPath.getTotalLength(); enPts=[]; for(let i=0;i<=300;i++){const p=enPath.getPointAtLength(L*i/300);enPts.push([p.x,p.y])}
+  enX=null;
+}
+const idxX=x=>{let bi=0,bd=1e9;enPts.forEach((p,i)=>{const d=Math.abs(p[0]-x);if(d<bd){bd=d;bi=i}});return bi};
+function moveEnergy(key,x){
+  if(enProf!==key) buildEnergy(key);
+  const dot=document.getElementById('enDot'); cancelAnimationFrame(enRaf);
+  const i1=idxX(x), i0=enX===null?i1:idxX(enX); enX=x;
+  const dur=reduce||i0===i1?0:800, t0=performance.now();
+  const f=now=>{const t=dur?Math.min(1,(now-t0)/dur):1,e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; const p=enPts[Math.round(i0+(i1-i0)*e)];
+    dot.setAttribute('cx',p[0]);dot.setAttribute('cy',p[1]); if(t<1) enRaf=requestAnimationFrame(f)};
+  enRaf=requestAnimationFrame(f);
+}
+
+/* ====================== INTERFACE ====================== */
+const $=id=>document.getElementById(id);
+let M=0,S=0,autoTimer=null;
+const tabs=$('tabs');
+MECH.forEach((m,i)=>{const b=document.createElement('button');b.className='tab';b.role='tab';b.innerHTML=`<small>${i+1}</small>${m.tab}`;b.onclick=()=>{stopAuto();select(i,0)};tabs.append(b)});
+
+function render(fromScene){
+  const m=MECH[M], st=m.steps[S];
+  [...tabs.children].forEach((b,i)=>b.setAttribute('aria-selected',i===M));
+  $('mTitle').textContent=`${m.tab}: ${m.title}`; $('mSub').textContent=m.sub;
+  $('stepNum').textContent=`Etapa ${S+1} de ${m.steps.length}`; $('stepTitle').textContent=st.t; $('stepText').textContent=st.d;
+  $('prev').disabled=S===0; $('next').textContent=S===m.steps.length-1?(M<MECH.length-1?'Próximo mecanismo ▶':'Recomeçar'):'Próxima ▶';
+  const dots=$('dots'); dots.innerHTML='';
+  m.steps.forEach((_,i)=>{const d=document.createElement('button');d.className='dot';d.setAttribute('aria-label','Etapa '+(i+1));if(i===S)d.setAttribute('aria-current','step');d.onclick=()=>{stopAuto();go(i)};dots.append(d)});
+  $('facts').innerHTML=Object.entries(m.facts).map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  $('enTitle').textContent=m.prof==='one'?'Diagrama de energia: uma etapa':'Diagrama de energia: duas etapas, com intermediário';
+  transition(fromScene,st.s); moveEnergy(m.prof,st.ep);
+}
+function select(mi,si){M=mi;S=si;history.replaceState(null,'','#'+MECH[M].id);enX=null;render(null);
+  tabs.children[M].scrollIntoView({block:'nearest',inline:'center',behavior:reduce?'auto':'smooth'})}
+function go(si){const from=MECH[M].steps[S].s;S=si;render(from)}
+function next(){const m=MECH[M]; if(S<m.steps.length-1) go(S+1); else if(M<MECH.length-1) select(M+1,0); else select(0,0)}
+$('prev').onclick=()=>{stopAuto();if(S>0)go(S-1)};
+$('next').onclick=()=>{stopAuto();next()};
+$('replay').onclick=()=>drawArrows(MECH[M].steps[S].s);
+function stopAuto(){clearTimeout(autoTimer);autoTimer=null;$('auto').textContent='Reproduzir tudo'}
+$('auto').onclick=()=>{
+  if(autoTimer){stopAuto();return}
+  $('auto').textContent='Pausar';
+  if(S===MECH[M].steps.length-1) go(0);
+  const tick=()=>{const m=MECH[M]; const na=(m.steps[S].s.arrows||[]).length;
+    autoTimer=setTimeout(()=>{ if(S<m.steps.length-1){go(S+1);tick()} else stopAuto() },3000+na*500)};
+  tick();
+};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stopAuto();next()} if(e.key==='ArrowLeft'&&S>0){stopAuto();go(S-1)}});
+const toTop=i=>{stopAuto();select(i,0);window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})};
+
+/* resumo */
+const cols=['Substrato','Reagente','Solvente','Cinética','Estereoquímica','Rearranjo'];
+$('summary').innerHTML=`<tr><th></th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`+
+  MECH.map((m,i)=>`<tr><td><a href="#${m.id}" data-m="${i}">${m.tab}</a></td>${cols.map(c=>`<td>${m.facts[c]}</td>`).join('')}</tr>`).join('');
+$('summary').addEventListener('click',e=>{const a=e.target.closest('a[data-m]');if(!a)return;e.preventDefault();toTop(+a.dataset.m)});
+
+/* fluxograma */
+const flow={sub:null,reag:null};
+document.querySelectorAll('[data-flow]').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.flow; flow[k]=b.dataset.v;
+  document.querySelectorAll(`[data-flow="${k}"]`).forEach(x=>x.setAttribute('aria-pressed',x===b));
+  if(k==='sub') $('flowStep2').hidden=false;
+  const out=$('flowOut');
+  if(flow.sub&&flow.reag){const [r,ex,mi]=DECIDE[flow.sub][flow.reag];
+    out.hidden=false; out.innerHTML=`<p class="fres">${r}</p><p>${ex}</p>${mi!==null?`<a href="#${MECH[mi].id}" data-m="${mi}">Ver o mecanismo ${MECH[mi].tab} passo a passo</a>`:''}`}
+});
+$('flowOut').addEventListener('click',e=>{const a=e.target.closest('a[data-m]');if(!a)return;e.preventDefault();toTop(+a.dataset.m)});
+$('flowReset').onclick=()=>{flow.sub=flow.reag=null;document.querySelectorAll('[data-flow]').forEach(x=>x.setAttribute('aria-pressed','false'));$('flowStep2').hidden=true;$('flowOut').hidden=true};
+
+/* desafios */
+$('quiz').innerHTML=QUIZ.map((q,i)=>`<div class="q" data-i="${i}"><p class="stem">${i+1}. ${q.q}</p><div class="opts">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><p class="fb" hidden></p></div>`).join('');
+$('quiz').addEventListener('click',e=>{
+  const link=e.target.closest('a[data-m]'); if(link){e.preventDefault();toTop(+link.dataset.m);return}
+  const b=e.target.closest('.opt'); if(!b) return; const box=b.closest('.q'),q=QUIZ[+box.dataset.i],j=+b.dataset.j,fb=box.querySelector('.fb');
+  box.querySelectorAll('.opt').forEach(o=>o.classList.remove('right','wrong'));
+  const ok=j===q.a; b.classList.add(ok?'right':'wrong'); if(!ok) box.querySelectorAll('.opt')[q.a].classList.add('right');
+  fb.hidden=false; fb.className='fb '+(ok?'right':'wrong');
+  fb.innerHTML=(ok?'Correto. ':'Ainda não. ')+q.e+` <a href="#${MECH[q.m].id}" data-m="${q.m}">Rever ${MECH[q.m].tab}</a>`;
+});
+
+const start=Math.max(0,MECH.findIndex(m=>'#'+m.id===location.hash));
+select(start,0);
+window.addEventListener('hashchange',()=>{const i=MECH.findIndex(m=>'#'+m.id===location.hash);if(i>=0&&i!==M){stopAuto();select(i,0)}});
+
+</script>
+</body>
+</html>
