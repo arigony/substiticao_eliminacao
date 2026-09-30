@@ -17,9 +17,4 @@ Também inclui:
 - quadro comparativo (substrato, reagente, solvente, cinética, estereoquímica, rearranjo);
 - desafios com correção imediata.
 
-Para abrir direto num mecanismo, acrescente o código ao endereço, por exemplo:
-`https://SEU-USUARIO.github.io/substituicao_eliminacao/#sn1`
 
-
-
-Veja também: [Adição à ligação dupla C=C](https://arigony.github.io/adicao_mecanismo/).
